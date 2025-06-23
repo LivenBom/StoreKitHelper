@@ -100,13 +100,27 @@ fileprivate struct ProductsListView: View {
     var defaultSelectedProductId: String? = nil
     var body: some View {
         Group {
-            ForEach(store.products) { product in
-                let hasPurchased = store.isProductPurchased(product)
-                let unit = product.subscription?.subscriptionPeriod.unit
-                let isBuying = buyingProductID == product.id
-                if let filteredProducts = viewModel.filteredProducts {
-                    let shouldDisplay = filteredProducts(product.id, product)
-                    if shouldDisplay == true {
+            if let store = store {
+                ForEach(store.products) { product in
+                    let hasPurchased = store.isProductPurchased(product)
+                    let unit = product.subscription?.subscriptionPeriod.unit
+                    let isBuying = buyingProductID == product.id
+                    if let filteredProducts = viewModel.filteredProducts {
+                        let shouldDisplay = filteredProducts(product.id, product)
+                        if shouldDisplay == true {
+                            ProductListLabelView(
+                                selectedProductId: $selectedProductID,
+                                productId: product.id,
+                                displayPrice: product.displayPrice,
+                                displayName: product.displayName,
+                                description: product.description,
+                                hasPurchased: hasPurchased,
+                                isBuying: isBuying,
+                                unit: unit
+                            )
+                            .disabled(buyingProductID != nil || isDisabled(product: product))
+                        }
+                    } else {
                         ProductListLabelView(
                             selectedProductId: $selectedProductID,
                             productId: product.id,
@@ -119,27 +133,24 @@ fileprivate struct ProductsListView: View {
                         )
                         .disabled(buyingProductID != nil || isDisabled(product: product))
                     }
-                } else {
-                    ProductListLabelView(
-                        selectedProductId: $selectedProductID,
-                        productId: product.id,
-                        displayPrice: product.displayPrice,
-                        displayName: product.displayName,
-                        description: product.description,
-                        hasPurchased: hasPurchased,
-                        isBuying: isBuying,
-                        unit: unit
-                    )
-                    .disabled(buyingProductID != nil || isDisabled(product: product))
                 }
+            } else {
+                Text("Store context not available")
+                    .foregroundColor(.red)
             }
         }
         .onAppear() {
-            selectedProductID = defaultSelectedProductId ?? store.productIds.first ?? ""
+            if let store = store {
+                selectedProductID = defaultSelectedProductId ?? store.productIds.first ?? ""
+            } else {
+                selectedProductID = defaultSelectedProductId ?? ""
+            }
         }
     }
     /// 有购买，禁用`订阅`，`非消耗型`，不禁用`消耗型`
     func isDisabled(product: Product) -> Bool {
+        guard let store = store else { return false }
+        
         guard store.purchasedProductIds.count > 0 else { return false }
         guard store.purchasedProductIds.contains(product.id) else {
             return true
@@ -181,7 +192,9 @@ struct PurchaseButtonView: View {
     @Binding var loading: ProductsLoadingStatus
     var body: some View {
         Button(action: {
-            guard let product = store.products.first(where: { $0.id == selectedProductID }) else {
+            guard let store = store, let selectedProductID = selectedProductID,
+                  let product = store.products.first(where: { $0.id == selectedProductID }) else {
+                Utils.alert(title: "purchase_failed".localized(locale: locale), message: "No product selected or store context not available")
                 return
             }
             purchase(product: product)
@@ -199,6 +212,11 @@ struct PurchaseButtonView: View {
         .tint(.accentColor)
     }
     func purchase(product: Product) {
+        guard let store = store else {
+            Utils.alert(title: "purchase_failed".localized(locale: locale), message: "Store context not available")
+            return
+        }
+        
         Task {
             buyingProductID = product.id
             do {

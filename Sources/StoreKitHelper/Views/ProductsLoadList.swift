@@ -30,7 +30,7 @@ public struct ProductsLoadList<Content: View>: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(.background.opacity(0.73))
                     .padding(8)
-            } else if store.products.count > 0 {
+            } else if let store = store, store.products.count > 0 {
                 VStack(spacing: 0) {
                     content()
                 }
@@ -55,6 +55,8 @@ public struct ProductsLoadList<Content: View>: View {
         }
         .frame(minHeight: viewHeight)
         .onChange(of: products, initial: false, { old, val in
+            guard let store = store else { return }
+            
             if products.count > 0 {
                 let productIdSet = Set(store.productIds)
                 /// 根据 id 进行排序
@@ -74,6 +76,12 @@ public struct ProductsLoadList<Content: View>: View {
             error = nil
             Task {
                 do {
+                    guard let store = store else {
+                        loading = .unavailable
+                        error = StoreKitError.unknown
+                        return
+                    }
+                    
                     let products = try await store.getProducts()
                     if products.count == 0, store.products.count == 0 {
                         loading = .unavailable

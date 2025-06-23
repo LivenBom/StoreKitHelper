@@ -20,12 +20,17 @@ struct RestorePurchasesButtonView: View {
             Task {
                 restoringPurchase = true
                 do {
-                    try await store.restorePurchases()
-                    restoringPurchase = false
-                    if store.purchasedProductIds.count > 0 {
-                        popupDismissHandle?()
+                    if let store = store {
+                        try await store.restorePurchases()
+                        restoringPurchase = false
+                        if store.purchasedProductIds.count > 0 {
+                            popupDismissHandle?()
+                        } else {
+                            Utils.alert(title: "no_purchase_available".localized(locale: locale), message: "")
+                        }
                     } else {
-                        Utils.alert(title: "no_purchase_available".localized(locale: locale), message: "")
+                        restoringPurchase = false
+                        Utils.alert(title: "restore_purchases_failed".localized(locale: locale), message: "StoreContext not available")
                     }
                 } catch {
                     restoringPurchase = false

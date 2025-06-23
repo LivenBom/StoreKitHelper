@@ -105,13 +105,29 @@ private struct ProductsListView: View {
     @State var hovering: Bool = false
     var body: some View {
         VStack(spacing: 0) {
-            ForEach(store.products) { product in
-                let unit = product.subscription?.subscriptionPeriod.unit
-                let isBuying = buyingProductID == product.id
-                let hasPurchased = store.isProductPurchased(product)
-                if let filteredProducts = viewModel.filteredProducts {
-                    let shouldDisplay = filteredProducts(product.id, product)
-                    if shouldDisplay == true {
+            if let store = store {
+                ForEach(store.products) { product in
+                    let unit = product.subscription?.subscriptionPeriod.unit
+                    let isBuying = buyingProductID == product.id
+                    let hasPurchased = store.isProductPurchased(product)
+                    if let filteredProducts = viewModel.filteredProducts {
+                        let shouldDisplay = filteredProducts(product.id, product)
+                        if shouldDisplay == true {
+                            ProductsListLabelView(
+                                isBuying: .constant(isBuying),
+                                productId: product.id,
+                                unit: unit,
+                                displayPrice: product.displayPrice,
+                                displayName: product.displayName,
+                                description: product.description,
+                                hasPurchased: hasPurchased
+                            ) {
+                                purchase(product: product)
+                            }
+                            .id(product.id)
+                            .disabled(buyingProductID != nil)
+                        }
+                    } else {
                         ProductsListLabelView(
                             isBuying: .constant(isBuying),
                             productId: product.id,
@@ -126,25 +142,19 @@ private struct ProductsListView: View {
                         .id(product.id)
                         .disabled(buyingProductID != nil)
                     }
-                } else {
-                    ProductsListLabelView(
-                        isBuying: .constant(isBuying),
-                        productId: product.id,
-                        unit: unit,
-                        displayPrice: product.displayPrice,
-                        displayName: product.displayName,
-                        description: product.description,
-                        hasPurchased: hasPurchased
-                    ) {
-                        purchase(product: product)
-                    }
-                    .id(product.id)
-                    .disabled(buyingProductID != nil)
                 }
+            } else {
+                Text("Store context not available")
+                    .foregroundColor(.red)
             }
         }
     }
     func purchase(product: Product) {
+        guard let store = store else {
+            Utils.alert(title: "purchase_failed".localized(locale: locale), message: "Store context not available")
+            return
+        }
+        
         Task {
             buyingProductID = product.id
             do {
