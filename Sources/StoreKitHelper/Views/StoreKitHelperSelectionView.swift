@@ -7,12 +7,13 @@
 
 import SwiftUI
 import StoreKit
+import Observation
 
 // MARK: - 选择商品付费界面
 public struct StoreKitHelperSelectionView: View {
-    @EnvironmentObject var store: StoreContext
+    @Environment(\.store) private var store
     @Environment(\.pricingContent) private var pricingContent
-    @ObservedObject var viewModel = ProductsListViewModel()
+    @State var viewModel = ProductsListViewModel()
     /// 正在`购买`中
     @State var buyingProductID: String? = nil
     /// 选中的产品ID
@@ -92,8 +93,8 @@ public struct StoreKitHelperSelectionView: View {
 
 // MARK: - 产品列表
 fileprivate struct ProductsListView: View {
-    @EnvironmentObject var store: StoreContext
-    @ObservedObject var viewModel = ProductsListViewModel()
+    @Environment(\.store) private var store
+    @State var viewModel = ProductsListViewModel()
     @Binding var selectedProductID: ProductID?
     @Binding var buyingProductID: String?
     var defaultSelectedProductId: String? = nil
@@ -174,7 +175,7 @@ fileprivate struct ProductsListView: View {
 struct PurchaseButtonView: View {
     @Environment(\.locale) var locale
     @Environment(\.popupDismissHandle) private var popupDismissHandle
-    @EnvironmentObject var store: StoreContext
+    @Environment(\.store) private var store
     @Binding var selectedProductID: ProductID?
     @Binding var buyingProductID: String?
     @Binding var loading: ProductsLoadingStatus

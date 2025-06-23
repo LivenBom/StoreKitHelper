@@ -7,11 +7,12 @@
 
 import SwiftUI
 import StoreKit
+import Observation
 
 /// 用户更新产品列表
 public struct ProductsLoadList<Content: View>: View {
     @Environment(\.popupDismissHandle) private var popupDismissHandle
-    @EnvironmentObject var store: StoreContext
+    @Environment(\.store) private var store
     @Binding var loading: ProductsLoadingStatus
     @State var products: [Product] = []
     @State var error: StoreKitError? = nil

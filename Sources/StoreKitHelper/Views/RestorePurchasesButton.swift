@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import Observation
 
 // MARK: 恢复购买
 /// 恢复购买
 struct RestorePurchasesButtonView: View {
     @Environment(\.locale) var locale
     @Environment(\.popupDismissHandle) private var popupDismissHandle
-    @EnvironmentObject var store: StoreContext
+    @Environment(\.store) private var store
     @Binding var restoringPurchase: Bool
     var body: some View {
         Button(action: {

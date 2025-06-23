@@ -6,16 +6,17 @@
 //
 
 import SwiftUI
+import Observation
 
 public struct PurchasePopupButton<LabelView: View>: View {
-    @EnvironmentObject public var store: StoreContext
+    @Environment(\.store) private var store
     var label: (() -> LabelView)?
     public init(label: (() -> LabelView)? = nil) {
         self.label = label
     }
     public var body: some View {
         Button(action: {
-            store.isShowingPurchasePopup.toggle()
+            store?.isShowingPurchasePopup.toggle()
         }) {
             if let label {
                 label()

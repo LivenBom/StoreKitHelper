@@ -7,6 +7,7 @@
 
 import SwiftUI
 import StoreKit
+import Observation
 
 
 public enum ProductsLoadingStatus {
@@ -23,8 +24,8 @@ public enum ProductsLoadingStatus {
 // MARK: - 默认付费界面
 public struct StoreKitHelperView: View {
     @Environment(\.pricingContent) private var pricingContent
-    @EnvironmentObject var store: StoreContext
-    @ObservedObject var viewModel = ProductsListViewModel()
+    @Environment(\.store) private var store
+    @State var viewModel = ProductsListViewModel()
     /// 正在`购买`中
     @State var buyingProductID: String? = nil
     /// `产品`正在加载中...
@@ -88,16 +89,17 @@ public struct StoreKitHelperView: View {
     }
 }
 
-class ProductsListViewModel: ObservableObject {
-    @Published var filteredProducts: ((String, Product) -> Bool)?
+@Observable
+class ProductsListViewModel {
+    var filteredProducts: ((String, Product) -> Bool)?
 }
 
 // MARK: - Products List
 private struct ProductsListView: View {
     @Environment(\.locale) var locale
     @Environment(\.popupDismissHandle) private var popupDismissHandle
-    @EnvironmentObject var store: StoreContext
-    @ObservedObject var viewModel = ProductsListViewModel()
+    @Environment(\.store) private var store
+    @State var viewModel = ProductsListViewModel()
     @Binding var buyingProductID: String?
     @Binding var loading: ProductsLoadingStatus
     @State var hovering: Bool = false
@@ -174,7 +176,7 @@ private struct ProductsListView: View {
 
 // MARK: - Products List - item
 private struct ProductsListLabelView: View {
-    @EnvironmentObject var store: StoreContext
+    @Environment(\.store) private var store
     @State var hovering: Bool = false
     @Binding var isBuying: Bool
     var productId: ProductID

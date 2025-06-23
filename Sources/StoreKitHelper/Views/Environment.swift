@@ -8,6 +8,11 @@
 
 import SwiftUI
 
+// MARK: - StoreContext Environment Key
+struct StoreContextKey: EnvironmentKey {
+    static let defaultValue: StoreContext? = nil
+}
+
 struct PopupDismissHandle: @preconcurrency EnvironmentKey {
     @MainActor static let defaultValue: (() -> Void)? = nil
 }
@@ -32,6 +37,10 @@ struct PricingContent<T: View>: EnvironmentKey {
 }
 
 public extension EnvironmentValues {
+    var store: StoreContext? {
+        get { self[StoreContextKey.self] }
+        set { self[StoreContextKey.self] = newValue }
+    }
     var termsOfServiceLabel: String {
         get { self[TermsOfServiceLabel.self] }
         set { self[TermsOfServiceLabel.self] = newValue }
@@ -63,6 +72,11 @@ public extension EnvironmentValues {
 
 // MARK: - View Extensions
 public extension View {
+    /// 添加 StoreContext 到环境中
+    func storeContext(_ store: StoreContext) -> some View {
+        return self.environment(\.store, store)
+    }
+    
     func termsOfService(action: @escaping () -> Void) -> some View {
         return self.environment(\.termsOfServiceHandle, action)
     }

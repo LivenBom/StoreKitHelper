@@ -2,8 +2,10 @@
 // https://docs.swift.org/swift-book
 
 import StoreKit
+import Observation
 
-public class StoreContext: ObservableObject, @unchecked Sendable {
+@Observable
+public class StoreContext: @unchecked Sendable {
     /// 更新
     private var transactionUpdateTask: Task<Void, Never>? = nil
     /**
@@ -17,12 +19,12 @@ public class StoreContext: ObservableObject, @unchecked Sendable {
     private var persistedProductIds: [String]
     // MARK: - 产品列表 ID
     /// 产品列表 ID
-    @Published public internal(set) var productIds: [String] = [] {
+    public internal(set) var productIds: [String] = [] {
         willSet { persistedProductIds = newValue }
     }
     // MARK: - 产品列表
     /// 产品列表 -  更新 ``StoreContext/productIds`` ID，通过 ``StoreContext/updateProducts(_:)`` 更新产品列表
-    @Published public var products: [Product] = []
+    public var products: [Product] = []
     /**
     购买的产品 ID 列表。`用于缓存目的`
 
@@ -34,7 +36,7 @@ public class StoreContext: ObservableObject, @unchecked Sendable {
     @Persisted(key: key("purchasedProductIds"), defaultValue: []) private var persistedPurchasedProductIds: [String]
     // MARK: - 已购买产品 ID
     /// 已购买的产品ID，限制 id 只能在模块中修改
-    @Published public internal(set) var purchasedProductIds: [String] = [] {
+    public internal(set) var purchasedProductIds: [String] = [] {
         willSet { persistedPurchasedProductIds = newValue }
     }
     /// 购买交易，同时`更新`已购买的产品 ``StoreContext/purchasedProductIds`` ID
@@ -48,7 +50,7 @@ public class StoreContext: ObservableObject, @unchecked Sendable {
     
     /// 弹出 PopUp 显示产品支付界面
     /// 是否显示购买弹窗
-    @Published public var isShowingPurchasePopup: Bool = false
+    public var isShowingPurchasePopup: Bool = false
     /// ``StoreContext/init(productIds:)``
     public convenience init<Product: InAppProduct>(products: [Product]) {
         self.init(productIds: products.map { $0.id })

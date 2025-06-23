@@ -53,10 +53,10 @@ enum AppProduct: String, InAppProduct {
 }
 
 @main struct DevTutorApp: App {
-    @StateObject var store = StoreContext(products: AppProduct.allCases)
+    @State var store = StoreContext(products: AppProduct.allCases)
     var body: some Scene {
         WindowGroup {
-            ContentView().environmentObject(store)
+            ContentView().storeContext(store)
         }
     }
 }
@@ -66,14 +66,14 @@ Use `StoreKitHelperView` to directly display an in-app purchase popup view and c
 
 ```swift
 struct PurchaseContent: View {
-    @EnvironmentObject var store: StoreContext
+    @Environment(\.store) private var store
     var body: some View {
         StoreKitHelperView()
             .frame(maxWidth: 300)
             .frame(minWidth: 260)
             // Triggered when the popup is dismissed (e.g., user clicks the close button)
             .onPopupDismiss {
-                store.isShowingPurchasePopup = false
+                store?.isShowingPurchasePopup = false
             }
             // Sets the content area displayed in the purchase interface 
             // (can include feature descriptions, version comparisons, etc.)
@@ -94,13 +94,19 @@ Click to open the paid product list interface.
 
 ```swift
 struct PurchaseButton: View {
-    @EnvironmentObject var store: StoreContext
+    @Environment(\.store) private var store
+    @State private var isShowingPurchasePopup: Bool = false
     var body: some View {
-        if store.hasNotPurchased == true {
+        if store?.hasNotPurchased == true {
             PurchasePopupButton()
-                .sheet(isPresented: $store.isShowingPurchasePopup) {
+                .sheet(isPresented: $isShowingPurchasePopup) {
                     /// Popup with the paid product list
                     PurchaseContent()
+                }
+                .onChange(of: store?.isShowingPurchasePopup) { _, newValue in
+                    if let newValue = newValue {
+                        isShowingPurchasePopup = newValue
+                    }
                 }
         }
     }
@@ -110,10 +116,10 @@ struct PurchaseButton: View {
 You can use the `hasNotPurchased` property in `StoreContext` to check if the user has made a purchase, and then dynamically display different interface content. For example:
 
 ```swift
-@EnvironmentObject var store: StoreContext
+@Environment(\.store) private var store
 
 var body: some View {
-    if store.hasNotPurchased == true {
+    if store?.hasNotPurchased == true {
         // 🧾 User has not purchased - Show restricted content or prompt for purchase
     } else {
         // ✅ User has purchased - Show full features
@@ -123,7 +129,7 @@ var body: some View {
 
 ### filteredProducts
 
-This is a simple migration solution: the product list is filtered by product ID, retaining the old product IDs so existing users don’t need to repurchase and can restore their purchases, while new users purchase through the new product IDs, achieving a smooth transition.
+This is a simple migration solution: the product list is filtered by product ID, retaining the old product IDs so existing users don't need to repurchase and can restore their purchases, while new users purchase through the new product IDs, achieving a smooth transition.
     
 ```swift
 enum AppProduct: String, InAppProduct {
